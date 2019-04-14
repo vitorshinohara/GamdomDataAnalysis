@@ -4,12 +4,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import numpy as np
 import time
+import datetime
 
 def main():
     match_number = 0
 
     with open('output.csv', 'w') as f:
-        f.write('match_number,crashNumber,players,max_bet,min_bet,total bet,total_profit\n')
+        f.write('date,time,match_number,crashNumber,players,max_bet,min_bet,total bet,total_profit\n')
 
     navegador = webdriver.Firefox()
     try:
@@ -25,6 +26,8 @@ def main():
             if (status == 'Inprogress | Good Luck' and progress == False):
                 print('[Game in progress]')
                 time.sleep(0.75)
+                date, hour = get_time()
+                print('Date {} - {}\n' .format(date, hour))
                 players, bet, max_bet, min_bet = crawl_info_from_game(navegador)
                 print('{} players. Total bet: {}\n'.format(players, bet))
                 progress = True
@@ -37,7 +40,7 @@ def main():
                 crashNumber = status.split('@')[1].strip().replace('x', '')
                 print('[Game Crashed] {}\n'.format(crashNumber))
 
-                output = "{},{},{},{},{},{},{}".format(match_number, crashNumber, players, max_bet, min_bet, bet, total_profit)
+                output = "{},{},{},{},{},{},{},{},{}".format(date, hour, match_number, crashNumber, players, max_bet, min_bet, bet, total_profit)
                 write_row(output)
 
     except Exception as e:
@@ -50,6 +53,13 @@ def write_row(data):
 
 def get_status_game(navegador):
     return navegador.find_element_by_class_name('pro_txt').get_attribute('innerHTML').strip()
+
+def get_time():
+    full_date = str(datetime.datetime.now())
+    date = full_date.split(' ')[0]
+    hour = full_date.split(' ')[1].split('.')[0]
+
+    return date, hour
 
 def crawl_info_from_game(navegador):
     ui.WebDriverWait(navegador, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'pl_onli')))
